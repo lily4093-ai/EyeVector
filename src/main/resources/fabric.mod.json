@@ -1,0 +1,28 @@
+{
+	"schemaVersion": 1,
+	"id": "eyevector",
+	"version": "${version}",
+	"name": "EyeVector",
+	"description": "엔더의 눈을 두 번 던져 엔더 요새 위치를 삼각측량으로 찾습니다",
+	"authors": [
+		"EyeVector"
+	],
+	"contact": {
+		"homepage": "",
+		"sources": ""
+	},
+	"license": "MIT",
+	"icon": "assets/eyevector/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"client": [
+			"com.eyevector.EyeVectorClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.16.0",
+		"minecraft": ">=1.21 <=1.21.4",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
