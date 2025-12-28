@@ -80,8 +80,8 @@ public class EyeVectorClient implements ClientModInitializer {
 
 					if (eye.age == 1) { // 방금 생성된 엔더의 눈
 						// 플레이어가 던진 엔더의 눈인지 확인
-						Vec3d playerPos = client.player.getPos();
-						Vec3d eyePos = eye.getPos();
+						Vec3d playerPos = client.player.getEyePos();
+						Vec3d eyePos = new Vec3d(eye.getX(), eye.getY(), eye.getZ());
 						double distance = playerPos.distanceTo(eyePos);
 
 						if (distance < 3.0) { // 플레이어가 던진 것으로 판단
@@ -164,7 +164,7 @@ public class EyeVectorClient implements ClientModInitializer {
 				Text.translatable("eyevector.result.location", strongholdPos.x, strongholdPos.z),
 				false
 			);
-			Vec3d playerPos = client.player.getPos();
+			Vec3d playerPos = new Vec3d(client.player.getX(), client.player.getY(), client.player.getZ());
 			double distance = Math.sqrt(
 				Math.pow(strongholdPos.x - playerPos.x, 2) +
 				Math.pow(strongholdPos.z - playerPos.z, 2)
@@ -300,13 +300,13 @@ public class EyeVectorClient implements ClientModInitializer {
 
 		EyeTracker(EyeOfEnderEntity eye) {
 			this.eyeId = eye.getUuid();
-			this.startPosition = eye.getPos();
+			this.startPosition = new Vec3d(eye.getX(), eye.getY(), eye.getZ());
 			this.lastPosition = startPosition;
 		}
 
 		void update(EyeOfEnderEntity eye) {
 			tickCount++;
-			Vec3d currentPos = eye.getPos();
+			Vec3d currentPos = new Vec3d(eye.getX(), eye.getY(), eye.getZ());
 
 			// 2틱 이상이고, 충분히 이동했을 때만 각도 기록
 			if (tickCount >= 2) {
