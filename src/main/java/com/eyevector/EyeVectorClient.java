@@ -160,8 +160,10 @@ public class EyeVectorClient implements ClientModInitializer {
 		}
 
 		if (strongholdPos != null) {
+			int roundedX = (int) Math.round(strongholdPos.x);
+			int roundedZ = (int) Math.round(strongholdPos.z);
 			client.player.sendMessage(
-				Text.translatable("eyevector.result.location", strongholdPos.x, strongholdPos.z),
+				Text.translatable("eyevector.result.location", roundedX, roundedZ),
 				false
 			);
 			Vec3d playerPos = new Vec3d(client.player.getX(), client.player.getY(), client.player.getZ());
@@ -169,8 +171,9 @@ public class EyeVectorClient implements ClientModInitializer {
 				Math.pow(strongholdPos.x - playerPos.x, 2) +
 				Math.pow(strongholdPos.z - playerPos.z, 2)
 			);
+			int roundedDistance = (int) Math.round(distance);
 			client.player.sendMessage(
-				Text.translatable("eyevector.result.distance", distance),
+				Text.translatable("eyevector.result.distance", roundedDistance),
 				false
 			);
 			// 성공시 초기화
