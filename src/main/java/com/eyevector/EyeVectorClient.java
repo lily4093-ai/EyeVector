@@ -3,10 +3,10 @@ package com.eyevector;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.EyeOfEnderEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.projectile.EyeOfEnder;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -57,10 +57,10 @@ public class EyeVectorClient implements ClientModInitializer {
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
-			if (client.world != null && client.player != null) {
+			if (client.level != null && client.player != null) {
 				// 활성 추적기 업데이트
 				activeTrackers.removeIf(tracker -> {
-					EyeOfEnderEntity eye = tracker.getEye(client.world);
+					EyeOfEnder eye = tracker.getEye(client.level);
 					if (eye == null || !eye.isAlive()) {
 						// 엔더의 눈이 사라지거나 죽으면 추적 완료
 						if (tracker.isValid()) {
@@ -73,19 +73,19 @@ public class EyeVectorClient implements ClientModInitializer {
 				});
 
 				// 엔더의 눈 엔티티 감지
-				for (EyeOfEnderEntity eye : client.world.getEntitiesByClass(
-						EyeOfEnderEntity.class,
-						client.player.getBoundingBox().expand(50),
+				for (EyeOfEnder eye : client.level.getEntitiesOfClass(
+						EyeOfEnder.class,
+						client.player.getBoundingBox().inflate(50),
 						e -> true)) {
 
-					if (eye.age == 1) { // 방금 생성된 엔더의 눈
+					if (eye.tickCount == 1) { // 방금 생성된 엔더의 눈
 						// 플레이어가 던진 엔더의 눈인지 확인
-						Vec3d playerPos = client.player.getEyePos();
-						Vec3d eyePos = new Vec3d(eye.getX(), eye.getY(), eye.getZ());
+						Vec3 playerPos = client.player.getEyePosition();
+						Vec3 eyePos = new Vec3(eye.getX(), eye.getY(), eye.getZ());
 						double distance = playerPos.distanceTo(eyePos);
 
 						if (distance < 3.0) { // 플레이어가 던진 것으로 판단
-							UUID eyeId = eye.getUuid();
+							UUID eyeId = eye.getUUID();
 							if (!trackedEyes.contains(eyeId)) {
 								trackedEyes.add(eyeId);
 								// 새로운 추적기 시작
@@ -103,16 +103,15 @@ public class EyeVectorClient implements ClientModInitializer {
 		});
 	}
 
-	private void processCompletedTracker(MinecraftClient client, EyeTracker tracker) {
-		Vec3d startPos = tracker.getStartPosition();
+	private void processCompletedTracker(Minecraft client, EyeTracker tracker) {
+		Vec3 startPos = tracker.getStartPosition();
 		double angle = tracker.getAverageAngle();
 
 		if (throwDataList.isEmpty()) {
 			// 첫 번째 던지기
 			throwDataList.add(new EyeThrowData(startPos.x, startPos.z, angle));
-			client.player.sendMessage(
-				Text.translatable("eyevector.recorded.first", throwDataList.size(), measurementMode),
-				false
+			client.player.sendSystemMessage(
+				Component.translatable("eyevector.recorded.first", throwDataList.size(), measurementMode)
 			);
 		} else if (throwDataList.size() < measurementMode) {
 			// 두 번째 또는 세 번째 던지기
@@ -128,9 +127,8 @@ public class EyeVectorClient implements ClientModInitializer {
 
 				// 설정된 최소 거리 이상 떨어져야 함
 				if (distance < minDistance) {
-					client.player.sendMessage(
-						Text.translatable("eyevector.error.too_close", i + 1, minDistance),
-						false
+					client.player.sendSystemMessage(
+						Component.translatable("eyevector.error.too_close", i + 1, minDistance)
 					);
 					return; // 기록 유지
 				}
@@ -142,16 +140,15 @@ public class EyeVectorClient implements ClientModInitializer {
 				// 모든 위치가 기록됨 - 계산 시작
 				calculateAndDisplay(client);
 			} else {
-				client.player.sendMessage(
-					Text.translatable("eyevector.recorded.nth", throwDataList.size(), throwDataList.size(), measurementMode),
-					false
+				client.player.sendSystemMessage(
+					Component.translatable("eyevector.recorded.nth", throwDataList.size(), throwDataList.size(), measurementMode)
 				);
 			}
 		}
 	}
 
-	private void calculateAndDisplay(MinecraftClient client) {
-		Vec3d strongholdPos;
+	private void calculateAndDisplay(Minecraft client) {
+		Vec3 strongholdPos;
 
 		if (measurementMode == 2) {
 			strongholdPos = calculateWith2Points(throwDataList.get(0), throwDataList.get(1));
@@ -162,32 +159,29 @@ public class EyeVectorClient implements ClientModInitializer {
 		if (strongholdPos != null) {
 			int roundedX = (int) Math.round(strongholdPos.x);
 			int roundedZ = (int) Math.round(strongholdPos.z);
-			client.player.sendMessage(
-				Text.translatable("eyevector.result.location", roundedX, roundedZ),
-				false
+			client.player.sendSystemMessage(
+				Component.translatable("eyevector.result.location", roundedX, roundedZ)
 			);
-			Vec3d playerPos = new Vec3d(client.player.getX(), client.player.getY(), client.player.getZ());
+			Vec3 playerPos = new Vec3(client.player.getX(), client.player.getY(), client.player.getZ());
 			double distance = Math.sqrt(
 				Math.pow(strongholdPos.x - playerPos.x, 2) +
 				Math.pow(strongholdPos.z - playerPos.z, 2)
 			);
 			int roundedDistance = (int) Math.round(distance);
-			client.player.sendMessage(
-				Text.translatable("eyevector.result.distance", roundedDistance),
-				false
+			client.player.sendSystemMessage(
+				Component.translatable("eyevector.result.distance", roundedDistance)
 			);
 			// 성공시 초기화
 			throwDataList.clear();
 		} else {
-			client.player.sendMessage(
-				Text.translatable("eyevector.error.parallel"),
-				false
+			client.player.sendSystemMessage(
+				Component.translatable("eyevector.error.parallel")
 			);
 			// 실패해도 기록은 유지 (한 번만 더 던지면 됨)
 		}
 	}
 
-	private Vec3d calculateWith2Points(EyeThrowData first, EyeThrowData second) {
+	private Vec3 calculateWith2Points(EyeThrowData first, EyeThrowData second) {
 		// 두 직선의 교점 계산
 		double x1 = first.x;
 		double z1 = first.z;
@@ -211,15 +205,15 @@ public class EyeVectorClient implements ClientModInitializer {
 		double intersectX = x1 + t1 * dx1;
 		double intersectZ = z1 + t1 * dz1;
 
-		return new Vec3d(intersectX, 0, intersectZ);
+		return new Vec3(intersectX, 0, intersectZ);
 	}
 
-	private Vec3d calculateWith3Points(EyeThrowData first, EyeThrowData second, EyeThrowData third) {
+	private Vec3 calculateWith3Points(EyeThrowData first, EyeThrowData second, EyeThrowData third) {
 		// 3개의 직선으로 더 정확한 위치 계산
 		// 각 두 직선의 교점을 구하고 평균을 냄
-		Vec3d pos12 = calculateWith2Points(first, second);
-		Vec3d pos23 = calculateWith2Points(second, third);
-		Vec3d pos13 = calculateWith2Points(first, third);
+		Vec3 pos12 = calculateWith2Points(first, second);
+		Vec3 pos23 = calculateWith2Points(second, third);
+		Vec3 pos13 = calculateWith2Points(first, third);
 
 		int validCount = 0;
 		double sumX = 0, sumZ = 0;
@@ -244,7 +238,7 @@ public class EyeVectorClient implements ClientModInitializer {
 			return null; // 모든 직선이 평행
 		}
 
-		return new Vec3d(sumX / validCount, 0, sumZ / validCount);
+		return new Vec3(sumX / validCount, 0, sumZ / validCount);
 	}
 
 	// 명령어용 메서드들
@@ -296,20 +290,20 @@ public class EyeVectorClient implements ClientModInitializer {
 	// 엔더의 눈 추적기 - 여러 틱에 걸쳐 정확한 각도 측정
 	private static class EyeTracker {
 		private final UUID eyeId;
-		private final Vec3d startPosition;
+		private final Vec3 startPosition;
 		private final List<Double> angles = new ArrayList<>();
-		private Vec3d lastPosition;
+		private Vec3 lastPosition;
 		private int tickCount = 0;
 
-		EyeTracker(EyeOfEnderEntity eye) {
-			this.eyeId = eye.getUuid();
-			this.startPosition = new Vec3d(eye.getX(), eye.getY(), eye.getZ());
+		EyeTracker(EyeOfEnder eye) {
+			this.eyeId = eye.getUUID();
+			this.startPosition = new Vec3(eye.getX(), eye.getY(), eye.getZ());
 			this.lastPosition = startPosition;
 		}
 
-		void update(EyeOfEnderEntity eye) {
+		void update(EyeOfEnder eye) {
 			tickCount++;
-			Vec3d currentPos = new Vec3d(eye.getX(), eye.getY(), eye.getZ());
+			Vec3 currentPos = new Vec3(eye.getX(), eye.getY(), eye.getZ());
 
 			// 2틱 이상이고, 충분히 이동했을 때만 각도 기록
 			if (tickCount >= 2) {
@@ -327,11 +321,11 @@ public class EyeVectorClient implements ClientModInitializer {
 			lastPosition = currentPos;
 		}
 
-		EyeOfEnderEntity getEye(net.minecraft.world.World world) {
-			var entities = world.getEntitiesByClass(
-				EyeOfEnderEntity.class,
-				new net.minecraft.util.math.Box(-30000000, -30000000, -30000000, 30000000, 30000000, 30000000),
-				entity -> entity.getUuid().equals(eyeId)
+		EyeOfEnder getEye(net.minecraft.world.level.Level world) {
+			var entities = world.getEntitiesOfClass(
+				EyeOfEnder.class,
+				new net.minecraft.world.phys.AABB(-30000000, -30000000, -30000000, 30000000, 30000000, 30000000),
+				entity -> entity.getUUID().equals(eyeId)
 			);
 			return entities.isEmpty() ? null : entities.get(0);
 		}
@@ -341,7 +335,7 @@ public class EyeVectorClient implements ClientModInitializer {
 			return angles.size() >= precision.getMinSamples();
 		}
 
-		Vec3d getStartPosition() {
+		Vec3 getStartPosition() {
 			return startPosition;
 		}
 
