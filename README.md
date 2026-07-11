@@ -4,8 +4,8 @@ A Minecraft Fabric mod that calculates stronghold coordinates using triangulatio
 
 ## Requirements
 
-- **Minecraft**: 26.1 - 26.1.2
-- **Fabric Loader**: 0.19.0+
+- **Minecraft**: 26.1 - 26.2
+- **Fabric Loader**: 0.19.3+
 - **Fabric API**: Required
 - **Java**: 25+
 
