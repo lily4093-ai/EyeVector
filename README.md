@@ -1,18 +1,17 @@
 # EyeVector
 
-A Minecraft Fabric mod that calculates stronghold coordinates using triangulation from Eye of Ender throw trajectories.
+A Minecraft mod that calculates stronghold coordinates using triangulation from Eye of Ender throw trajectories. Available for both Fabric and NeoForge.
 
 ## Requirements
 
 - **Minecraft**: 26.1 - 26.2
-- **Fabric Loader**: 0.19.3+
-- **Fabric API**: Required
+- **Loader**: Fabric Loader 0.19.3+ (with Fabric API) or NeoForge 26.2.0.87+
 - **Java**: 25+
 
 ## Installation
 
-1. Install [Fabric Loader](https://fabricmc.net/use/) and [Fabric API](https://modrinth.com/mod/fabric-api)
-2. Download EyeVector from [Releases](../../releases)
+1. Install [Fabric Loader](https://fabricmc.net/use/) + [Fabric API](https://modrinth.com/mod/fabric-api), or [NeoForge](https://neoforged.net/)
+2. Download the matching EyeVector jar (`eyevector-*.jar` for Fabric, `eyevector-neoforge-*.jar` for NeoForge) from [Releases](../../releases)
 3. Place the `.jar` file in your `.minecraft/mods` folder
 
 ## Usage

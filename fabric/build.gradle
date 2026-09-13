@@ -40,7 +40,7 @@ java {
 }
 
 jar {
-	from("LICENSE") {
+	from(rootProject.file("LICENSE")) {
 		rename { "${it}_${project.base.archivesName.get()}"}
 	}
 }
